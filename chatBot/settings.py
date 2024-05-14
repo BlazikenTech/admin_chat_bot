@@ -13,6 +13,10 @@ import environ
 import os
 from pathlib import Path
 
+from django.contrib.admin import AdminSite
+
+AdminSite.index_template = 'admin/base_site.html'
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -35,6 +39,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 CSRF_TRUSTED_ORIGINS = env.list('TRUSTED_ORIGINS')
 
+OPEN_AI_API_KEY = env('OPEN_AI_API_KEY')
 
 # Application definition
 
@@ -62,7 +67,7 @@ ROOT_URLCONF = 'chatBot.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -70,6 +75,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'utils.context_processors.open_ai_api_key'
             ],
         },
     },
