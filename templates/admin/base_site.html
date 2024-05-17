@@ -61,7 +61,7 @@
       border-radius: 10px;
       max-width: 80%;
       word-wrap: break-word;
-      white-space: pre-wrap; /* Ensures that preformatted text (including line breaks) is preserved */
+      white-space: pre-wrap;
     }
 
     .user-message {
@@ -103,14 +103,13 @@
 const sendChat = () => {
   const message = input.value.trim();
   if (message !== '') {
-    // Add user's message to the chatbox
+
     const userMessageElement = document.createElement('div');
     userMessageElement.classList.add('message', 'user-message');
     userMessageElement.textContent = message;
     messages.appendChild(userMessageElement);
     input.value = '';
 
-    // Call OpenAI API
     fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -126,7 +125,6 @@ const sendChat = () => {
       .then(data => {
         const assistantMessage = data.choices[0].message.content;
 
-        // Add assistant's message to the chatbox
         const assistantMessageElement = document.createElement('div');
         assistantMessageElement.classList.add('message', 'assistant-message');
         assistantMessageElement.innerHTML = assistantMessage.replace(/\n/g, '<br>');
