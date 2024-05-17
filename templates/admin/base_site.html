@@ -20,7 +20,7 @@
       border: 1px solid #ccc;
       border-radius: 5px;
       font-family: Arial, sans-serif;
-      z-index: 9999; /* Add this line to ensure the chatbox appears on top */
+      z-index: 9999;
     }
 
     .chatbox-header {
@@ -60,6 +60,8 @@
       padding: 8px 12px;
       border-radius: 10px;
       max-width: 80%;
+      word-wrap: break-word;
+      white-space: pre-wrap; /* Ensures that preformatted text (including line breaks) is preserved */
     }
 
     .user-message {
@@ -127,7 +129,7 @@ const sendChat = () => {
         // Add assistant's message to the chatbox
         const assistantMessageElement = document.createElement('div');
         assistantMessageElement.classList.add('message', 'assistant-message');
-        assistantMessageElement.textContent = assistantMessage;
+        assistantMessageElement.innerHTML = assistantMessage.replace(/\n/g, '<br>');
         messages.appendChild(assistantMessageElement);
         messages.scrollTop = messages.scrollHeight;
       })
