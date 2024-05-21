@@ -20,7 +20,7 @@
       border: 1px solid #ccc;
       border-radius: 5px;
       font-family: Arial, sans-serif;
-      z-index: 9999; /* Add this line to ensure the chatbox appears on top */
+      z-index: 9999;
     }
 
     .chatbox-header {
@@ -60,6 +60,8 @@
       padding: 8px 12px;
       border-radius: 10px;
       max-width: 80%;
+      word-wrap: break-word;
+      white-space: pre-wrap;
     }
 
     .user-message {
@@ -101,14 +103,13 @@
 const sendChat = () => {
   const message = input.value.trim();
   if (message !== '') {
-    // Add user's message to the chatbox
+
     const userMessageElement = document.createElement('div');
     userMessageElement.classList.add('message', 'user-message');
     userMessageElement.textContent = message;
     messages.appendChild(userMessageElement);
     input.value = '';
 
-    // Call OpenAI API
     fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -124,10 +125,9 @@ const sendChat = () => {
       .then(data => {
         const assistantMessage = data.choices[0].message.content;
 
-        // Add assistant's message to the chatbox
         const assistantMessageElement = document.createElement('div');
         assistantMessageElement.classList.add('message', 'assistant-message');
-        assistantMessageElement.textContent = assistantMessage;
+        assistantMessageElement.innerHTML = assistantMessage.replace(/\n/g, '<br>');
         messages.appendChild(assistantMessageElement);
         messages.scrollTop = messages.scrollHeight;
       })
