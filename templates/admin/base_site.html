@@ -193,13 +193,9 @@ const sendChat = () => {
             const assistantMessage = data.choices[0].message.content;
             const assistantMessageElement = document.createElement('div');
             assistantMessageElement.classList.add('message', 'assistant-message');
-
             assistantMessageElement.innerHTML = `<span>${assistantMessage.replace(/\n/g, '<br>')}</span><button class="copy-btn"><i class="fas fa-copy"></i></button>`;
-
             messages.appendChild(assistantMessageElement);
             messages.scrollTop = messages.scrollHeight;
-
-            // Add copy event listeners to new copy buttons
             const newCopyBtns = assistantMessageElement.querySelectorAll('.copy-btn');
             newCopyBtns.forEach(btn => btn.addEventListener('click', copyToClipboard));
         })
