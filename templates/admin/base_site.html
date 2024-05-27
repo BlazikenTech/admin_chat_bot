@@ -12,192 +12,179 @@
 {% block content %}
 <style>
     .chatbox {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 300px;
-      background-color: #f1f1f1;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-family: Arial, sans-serif;
-      z-index: 9999;
+        position: fixed;
+        top: 0;
+        right: -300px; /* Initially hidden */
+        width: 300px;
+        height: 100%;
+        background-color: #f1f1f1;
+        border-left: 1px solid #ccc;
+        z-index: 9999;
+        transition: right 0.3s ease; /* Smooth transition */
+    }
+
+    .chatbox.open {
+        right: 0; /* Slide into view */
     }
 
     .chatbox-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      background-color: #333;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    .expand-btn {
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 18px;
-      cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background-color: #333;
+        color: #fff;
+        cursor: pointer;
     }
 
     .chatbox-content {
-      display: none;
-      padding: 10px;
-    }
-
-    .chatbox.expanded .chatbox-content {
-      display: block;
+        padding: 10px;
     }
 
     .gpt-messages {
-      max-height: 200px;
-      overflow-y: auto;
+        max-height: 70vh;
+        overflow-y: auto;
     }
 
     .message {
-      margin-bottom: 10px;
-      padding: 8px 12px;
-      border-radius: 10px;
-      max-width: 80%;
-      word-wrap: break-word;
-      white-space: pre-wrap;
+        margin-bottom: 10px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        max-width: 80%;
+        word-wrap: break-word;
+        white-space: pre-wrap;
     }
 
     .user-message {
-      background-color: #333;
-      color: #fff;
-      align-self: flex-end;
+        background-color: #333;
+        color: #fff;
+        align-self: flex-end;
     }
 
     .assistant-message {
-      background-color: #e1e1e1;
-      color: #333;
-      align-self: flex-start;
+        background-color: #e1e1e1;
+        color: #333;
+        align-self: flex-start;
     }
 
     .input-container {
-      display: flex;
-      margin-top: 10px;
+        display: flex;
+        margin-top: 10px;
     }
 
     .chatbox-input {
-      flex: 1;
-      padding: 5px;
-      border: 1px solid #ccc;
-      border-radius: 3px;
+        flex: 1;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
     }
 
     .send-btn {
-      margin-left: 10px;
-      padding: 5px 10px;
-      background-color: #333;
-      color: #fff;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
+        margin-left: 10px;
+        padding: 5px 10px;
+        background-color: #333;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+
+    .burger-menu {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        font-size: 24px;
+        cursor: pointer;
+        background: none;
+        border: none;
+        color: #fff;
+    }
+
+    .hidden {
+        display: none;
     }
 </style>
 {{ block.super }}
+<button class="burger-menu">&#9776;</button>
+<div class="chatbox">
+    <div class="chatbox-header">
+        Blaziken AI
+        <button class="expand-btn">-</button>
+    </div>
+    <div class="chatbox-content">
+        <div class="gpt-messages"></div>
+        <div class="input-container">
+            <input type="text" class="chatbox-input" placeholder="Type a message...">
+            <button class="send-btn">Send</button>
+        </div>
+    </div>
+</div>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const sendChat = () => {
-        const message = input.value.trim();
-        if (message !== '') {
-            // Add user's message to the chatbox
-            const userMessageElement = document.createElement('div');
-            userMessageElement.classList.add('message', 'user-message');
-            userMessageElement.textContent = message;
-            messages.appendChild(userMessageElement);
-            input.value = '';
+const sendChat = () => {
+    const message = input.value.trim();
+    if (message !== '') {
+        const userMessageElement = document.createElement('div');
+        userMessageElement.classList.add('message', 'user-message');
+        userMessageElement.textContent = message;
+        messages.appendChild(userMessageElement);
+        input.value = '';
 
-            // Call the backend API
-            fetch('/api/chat/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    query: message
-                })
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-3.5-turbo',
+                messages: [{ role: 'user', content: message }]
             })
-            .then(response => response.json())
-            .then(data => {
-                const assistantMessage = data.response;
-
-                // Add assistant's message to the chatbox
-                const assistantMessageElement = document.createElement('div');
-                assistantMessageElement.classList.add('message', 'assistant-message');
-                assistantMessageElement.textContent = assistantMessage;
-                messages.appendChild(assistantMessageElement);
-                messages.scrollTop = messages.scrollHeight;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const assistantMessage = data.choices[0].message.content;
+            const assistantMessageElement = document.createElement('div');
+            assistantMessageElement.classList.add('message', 'assistant-message');
+            assistantMessageElement.innerHTML = assistantMessage.replace(/\n/g, '<br>');
+            messages.appendChild(assistantMessageElement);
+            messages.scrollTop = messages.scrollHeight;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
     }
+};
 
-    const chatbox = document.createElement('div');
-    chatbox.classList.add('chatbox');
+const chatbox = document.querySelector('.chatbox');
+const burgerMenu = document.querySelector('.burger-menu');
+const expandBtn = document.querySelector('.expand-btn');
+const content = document.querySelector('.chatbox-content');
+const messages = document.querySelector('.gpt-messages');
+const input = document.querySelector('.chatbox-input');
+const sendBtn = document.querySelector('.send-btn');
 
-    const header = document.createElement('div');
-    header.classList.add('chatbox-header');
-    header.textContent = 'Blaziken AI';
-
-    const expandBtn = document.createElement('button');
-    expandBtn.classList.add('expand-btn');
-    expandBtn.textContent = '+';
-
-    const content = document.createElement('div');
-    content.classList.add('chatbox-content');
-
-    const messages = document.createElement('div');
-    messages.classList.add('gpt-messages');
-
-    const inputContainer = document.createElement('div');
-    inputContainer.classList.add('input-container');
-
-    const input = document.createElement('input');
-    input.classList.add('chatbox-input');
-    input.type = 'text';
-    input.placeholder = 'Type a message...';
-    input.addEventListener('keydown', function(event) {
-        if (event.key === 'Enter') {
-            sendChat()
-        }
-    });
-
-    const sendBtn = document.createElement('button');
-    sendBtn.classList.add('send-btn');
-    sendBtn.textContent = 'Send';
-
-    header.appendChild(expandBtn);
-    chatbox.appendChild(header);
-    content.appendChild(messages);
-    inputContainer.appendChild(input);
-    inputContainer.appendChild(sendBtn);
-    content.appendChild(inputContainer);
-    chatbox.appendChild(content);
-
-    document.body.appendChild(chatbox);
-
-    let isExpanded = false;
-    expandBtn.addEventListener('click', () => {
-        isExpanded = !isExpanded;
-        if (isExpanded) {
-            chatbox.classList.add('expanded');
-            expandBtn.textContent = '-';
-        } else {
-            chatbox.classList.remove('expanded');
-            expandBtn.textContent = '+';
-        }
-    });
-
-    sendBtn.addEventListener('click', sendChat);
+burgerMenu.addEventListener('click', () => {
+    chatbox.classList.toggle('open');
+    burgerMenu.classList.toggle('hidden');
 });
 
+expandBtn.addEventListener('click', () => {
+    chatbox.classList.remove('open');
+    burgerMenu.classList.remove('hidden');
+});
+
+const apiKey = '{{open_ai_api_key}}';
+const apiUrl = 'https://api.openai.com/v1/chat/completions';
+
+sendBtn.addEventListener('click', sendChat);
+input.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        sendChat();
+    }
+});
 </script>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
+
