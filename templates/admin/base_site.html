@@ -10,6 +10,7 @@
 {% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
     .chatbox {
         position: fixed;
@@ -53,6 +54,10 @@
         max-width: 80%;
         word-wrap: break-word;
         white-space: pre-wrap;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
     }
 
     .user-message {
@@ -87,6 +92,16 @@
         border: none;
         border-radius: 3px;
         cursor: pointer;
+    }
+
+    .copy-btn {
+        align-self: flex-end;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #333;
+        font-size: 14px;
+        margin-bottom: 5px;
     }
 
     .burger-menu {
@@ -126,7 +141,7 @@ const sendChat = () => {
     if (message !== '') {
         const userMessageElement = document.createElement('div');
         userMessageElement.classList.add('message', 'user-message');
-        userMessageElement.textContent = message;
+        userMessageElement.innerHTML = `<button class="copy-btn"><i class="fas fa-copy"></i></button><span>${message}</span>`;
         messages.appendChild(userMessageElement);
         input.value = '';
 
@@ -146,14 +161,33 @@ const sendChat = () => {
             const assistantMessage = data.choices[0].message.content;
             const assistantMessageElement = document.createElement('div');
             assistantMessageElement.classList.add('message', 'assistant-message');
-            assistantMessageElement.innerHTML = assistantMessage.replace(/\n/g, '<br>');
+            assistantMessageElement.innerHTML = `<button class="copy-btn"><i class="fas fa-copy"></i></button><span>${assistantMessage.replace(/\n/g, '<br>')}</span>`;
             messages.appendChild(assistantMessageElement);
             messages.scrollTop = messages.scrollHeight;
+
+            // Add copy event listeners to new copy buttons
+            const newCopyBtns = assistantMessageElement.querySelectorAll('.copy-btn');
+            newCopyBtns.forEach(btn => btn.addEventListener('click', copyToClipboard));
         })
         .catch(error => {
             console.error('Error:', error);
         });
     }
+};
+
+const copyToClipboard = (event) => {
+    const messageElement = event.target.closest('.copy-btn').nextElementSibling;
+    const range = document.createRange();
+    range.selectNode(messageElement);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    try {
+        document.execCommand('copy');
+        alert('Message copied to clipboard');
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+    }
+    window.getSelection().removeAllRanges();
 };
 
 const chatbox = document.querySelector('.chatbox');
@@ -183,8 +217,10 @@ input.addEventListener('keydown', function(event) {
         sendChat();
     }
 });
+
+// Add event listeners to existing copy buttons on page load
+document.querySelectorAll('.copy-btn').forEach(btn => btn.addEventListener('click', copyToClipboard));
 </script>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
-
