@@ -11,7 +11,6 @@
 
 {% block content %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
 <style>
     .chatbox {
         position: fixed;
@@ -50,12 +49,12 @@
 
     .message {
         margin-bottom: 10px;
-        padding: 8px 12px;
+        padding: 8px 12px 8px 12px;
         border-radius: 10px;
         max-width: 80%;
         word-wrap: break-word;
         white-space: pre-wrap;
-        position: relative; 
+        position: relative;
     }
 
     .user-message {
@@ -97,11 +96,23 @@
     .send-btn {
         margin-left: 10px;
         padding: 5px 10px;
-        background-color: #333;
-        color: #fff;
+        background-color: #fff;
+        color: #333;
         border: none;
         border-radius: 3px;
         cursor: pointer;
+    }
+
+    .copy-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding-left: 3px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #333;
+        font-size: 14px;
     }
 
     .burger-menu {
@@ -119,6 +130,25 @@
     .hidden {
         display: none;
     }
+
+    .alert-box {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #fff;
+        color: #333;
+        padding: 10px 20px;
+        border-radius: 10px;
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.5s ease, transform 0.5s ease;
+        transform: translateY(-20px);
+    }
+
+    .alert-box.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
 </style>
 {{ block.super }}
 <button class="burger-menu">&#9776;</button>
@@ -135,13 +165,14 @@
         </div>
     </div>
 </div>
+<div class="alert-box" id="alert-box"></div>
 <script>
 const sendChat = () => {
     const message = input.value.trim();
     if (message !== '') {
         const userMessageElement = document.createElement('div');
         userMessageElement.classList.add('message', 'user-message');
-        userMessageElement.textContent = message;
+        userMessageElement.innerHTML = `<span>${message}</span><button class="copy-btn"><i class="fas fa-copy"></i></button>`;
         messages.appendChild(userMessageElement);
         input.value = '';
 
@@ -161,20 +192,41 @@ const sendChat = () => {
             const assistantMessage = data.choices[0].message.content;
             const assistantMessageElement = document.createElement('div');
             assistantMessageElement.classList.add('message', 'assistant-message');
-            assistantMessageElement.innerHTML = assistantMessage.replace(/\n/g, '<br>');
-
-            const copyBtn = document.createElement('button');
-            copyBtn.classList.add('copy-btn');
-            copyBtn.innerHTML = '<i class="fas fa-copy"></i>'; 
-
-            assistantMessageElement.appendChild(copyBtn);
+            assistantMessageElement.innerHTML = `<span>${assistantMessage.replace(/\n/g, '<br>')}</span><button class="copy-btn"><i class="fas fa-copy"></i></button>`;
             messages.appendChild(assistantMessageElement);
             messages.scrollTop = messages.scrollHeight;
+            const newCopyBtns = assistantMessageElement.querySelectorAll('.copy-btn');
+            newCopyBtns.forEach(btn => btn.addEventListener('click', copyToClipboard));
         })
         .catch(error => {
             console.error('Error:', error);
         });
     }
+};
+
+const copyToClipboard = (event) => {
+    const messageElement = event.target.closest('.copy-btn').previousElementSibling;
+    const range = document.createRange();
+    range.selectNode(messageElement);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    try {
+        document.execCommand('copy');
+        showAlert('Message copied to clipboard');
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+    }
+    window.getSelection().removeAllRanges();
+};
+
+const showAlert = (message) => {
+    const alertBox = document.getElementById('alert-box');
+    alertBox.textContent = message;
+    alertBox.classList.add('show');
+
+    setTimeout(() => {
+        alertBox.classList.remove('show');
+    }, 3000);
 };
 
 const chatbox = document.querySelector('.chatbox');
@@ -204,6 +256,8 @@ input.addEventListener('keydown', function(event) {
         sendChat();
     }
 });
+
+document.querySelectorAll('.copy-btn').forEach(btn => btn.addEventListener('click', copyToClipboard));
 </script>
 {% endblock %}
 
